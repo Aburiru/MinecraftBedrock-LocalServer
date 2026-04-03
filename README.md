@@ -1,5 +1,3 @@
-🚀 Excited to share that the Minecraft Bedrock Dedicated Server is specifically engineered to empower users to host their own Bedrock Edition servers locally! 💻✨ 
+Excited to share that the Minecraft Bedrock Dedicated Server is specifically engineered for hosting local Bedrock instances directly on your machine. 🚀 By leveraging the power of playit.gg, you can seamlessly bridge your local environment to the global web, enabling a robust online multiplayer experience. 🌐💻 #Minecraft #ServerHosting #Networking #TechSolutions #GamingCommunity
 
-Whether you're looking to optimize performance or build a private community right from your own machine, this tool is a game-changer for local hosting infrastructure. 🌐🙌
-
-#Minecraft #BedrockEdition #ServerHosting #TechInnovation #GamingCommunity #LocalHosting #Infrastructure
+https://playit.gg/login?redirect=%2Faccount%2Ftunnels%3F
