@@ -9,9 +9,10 @@ set "PLAYIT_EXE=C:\Program Files\playit_gg\bin\playit.exe"
 set "PLAYIT_PROCESS=playit.exe"
 set "PLAYIT_URL=https://playit.gg/account/tunnels"
 
-set "SERVER_DIR=C:\Users\abril\Documents\VibeCoding\MCServer\NewLife_1.26.13.1"
+set "SERVER_BASE_DIR=C:\Users\abril\Documents\MinecraftServers"
 set "SERVER_EXE=bedrock_server.exe"
-set "SERVER_PATH=%SERVER_DIR%\%SERVER_EXE%"
+set "SERVER_DIR="
+set "SERVER_PATH="
 
 :: ==========================================
 :: Elevation Check
@@ -37,7 +38,7 @@ cls
 :menu
 cls
 echo ==========================================
-echo       BDS Menu - Improved by Antigravity
+echo       Bedrock Dedicated Server - Menu
 echo ==========================================
 echo.
 echo Notice:
@@ -45,10 +46,70 @@ echo This script will activate following services:
 echo [1] Tunnel (playit.gg)
 echo [2] Minecraft Bedrock Dedicated Server (BDS)
 echo.
+echo Server Base Folder: %SERVER_BASE_DIR%
+echo.
 echo Do you want to continue the process? (Y/N)
 set /p "q= "
 if /I "%q%" == "N" exit /b
 if /I "%q%" NEQ "Y" goto menu
+
+goto select_server
+
+:: ==========================================
+:: Server Folder Selection
+:: ==========================================
+:select_server
+cls
+echo ==========================================
+echo       Select Bedrock Server Folder
+echo ==========================================
+echo.
+echo Base Folder: %SERVER_BASE_DIR%
+echo.
+
+if not exist "%SERVER_BASE_DIR%" (
+    echo ALERT: Server base folder not found at "%SERVER_BASE_DIR%"
+    pause
+    goto menu
+)
+
+set /a SERVER_COUNT=0
+for /D %%D in ("%SERVER_BASE_DIR%\*") do (
+    if exist "%%~fD\%SERVER_EXE%" (
+        set /a SERVER_COUNT+=1
+        set "SERVER_!SERVER_COUNT!=%%~fD"
+        echo [!SERVER_COUNT!] %%~nxD
+    )
+)
+
+if %SERVER_COUNT% EQU 0 (
+    echo No valid server folders found.
+    echo Each server folder must contain %SERVER_EXE%.
+    pause
+    goto menu
+)
+
+echo.
+echo [B] Back to main menu
+echo.
+set /p "server_choice=Choose server: "
+
+if /I "%server_choice%" == "B" goto menu
+
+set "SERVER_DIR="
+for /L %%I in (1,1,%SERVER_COUNT%) do (
+    if "%server_choice%" == "%%I" set "SERVER_DIR=!SERVER_%%I!"
+)
+
+if not defined SERVER_DIR (
+    echo Invalid selection.
+    pause
+    goto select_server
+)
+
+set "SERVER_PATH=%SERVER_DIR%\%SERVER_EXE%"
+
+goto start
 
 :start
 cls
@@ -110,7 +171,7 @@ echo bedrock_server.exe is running.
 :status
 cls
 echo ==========================================
-echo       BDS Server Status: ACTIVATED
+echo       Bedrock Dedicated Server - Status
 echo ==========================================
 echo.
 echo Tunnel: ONLINE
