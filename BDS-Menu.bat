@@ -14,6 +14,8 @@ set "SERVER_EXE=bedrock_server.exe"
 set "SERVER_DIR="
 set "SERVER_PATH="
 
+set "MC_PROCESS=C:\XboxGames\Minecraft for Windows\Content\Minecraft.Windows.exe"
+
 :: ==========================================
 :: Elevation Check
 :: ==========================================
@@ -122,10 +124,24 @@ if not exist "%PLAYIT_EXE%" (
     goto menu
 )
 
-:: Start playit
-start "" "%PLAYIT_EXE%"
-start "" "%PLAYIT_URL%"
-timeout /t 2 >nul
+:: Start playit if not already running
+tasklist /FI "IMAGENAME eq %PLAYIT_PROCESS%" | find /I "%PLAYIT_PROCESS%" >nul
+if %errorlevel% neq 0 (
+    echo Starting playit.exe...
+    start "" "%PLAYIT_EXE%"
+    timeout /t 2 >nul
+) else (
+    echo playit.exe is already running.
+)
+
+:: Only open URL if lock file doesn't exist (prevents duplicate tabs)
+if not exist "%temp%\playit_url_opened.lock" (
+    echo Opening playit.gg dashboard...
+    start "" "%PLAYIT_URL%"
+    echo opened> "%temp%\playit_url_opened.lock"
+) else (
+    echo Dashboard tab already open. Skipping.
+)
 
 :cek_playit
 tasklist /FI "IMAGENAME eq %PLAYIT_PROCESS%" | find /I "%PLAYIT_PROCESS%" >nul
@@ -179,10 +195,12 @@ echo BDS   : ONLINE
 echo.
 echo ------------------------------------------
 echo Options:
+echo [Play]    Launch Minecraft Bedrock
 echo [Exit]    Terminate all and close
 echo [Restart] Restart the activation process
 echo.
 set /p "q1=Selection: "
+if /I "%q1%" == "play" goto launch_minecraft
 if /I "%q1%" == "exit" goto exit
 if /I "%q1%" == "restart" (
     echo Restarting...
@@ -193,6 +211,23 @@ if /I "%q1%" == "restart" (
     start "" "%~f0"
     exit /b
 )
+goto status
+
+:launch_minecraft
+:: Check if Minecraft Bedrock is already running
+tasklist /FI "IMAGENAME eq %MC_PROCESS%" | find /I "%MC_PROCESS%" >nul
+if %errorlevel% equ 0 (
+    echo.
+    echo Minecraft Bedrock is already running.
+    timeout /t 2 >nul
+    goto status
+)
+
+:: Launch Minecraft Bedrock via protocol
+echo.
+echo Launching Minecraft Bedrock...
+start "" "minecraft:"
+timeout /t 2 >nul
 goto status
 
 :exit
@@ -207,8 +242,8 @@ taskkill /F /T /IM "%PLAYIT_PROCESS%" >nul 2>&1
 :: Also kill the signed version seen in original code
 taskkill /F /T /IM "playit-windows-x86_64-signed.exe" >nul 2>&1
 
-timeout /t 2 >nul
+timeout /t 3 >nul
 echo.
 echo All applications have been terminated.
-pause
+timeout /t 3 >nul
 exit /b
