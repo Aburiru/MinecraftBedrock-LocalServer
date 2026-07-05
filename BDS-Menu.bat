@@ -13,6 +13,11 @@ set "SERVER_BASE_DIR=C:\Users\abril\Documents\MinecraftServers"
 set "SERVER_EXE=bedrock_server.exe"
 set "SERVER_DIR="
 set "SERVER_PATH="
+set "SERVER_LOG=%temp%\bds-live.log"
+set "PLAYER_COUNT=0"
+set "AUTO_SHUTDOWN_ENABLED=1"
+set "SHUTDOWN_GRACE_PERIOD=180"
+set "SHUTDOWN_TIMER=0"
 
 set "MC_PROCESS=C:\XboxGames\Minecraft for Windows\Content\Minecraft.Windows.exe"
 
@@ -162,14 +167,14 @@ if not exist "%SERVER_PATH%" (
     goto menu
 )
 
-:: Start server as a separate process
+:: Start server as a separate process and pipe output to log
 :: We use a temporary script to ensure it runs correctly in its own window
-echo @echo off > "%temp%\run_bds.bat"
-echo cd /d "%SERVER_DIR%" >> "%temp%\run_bds.bat"
-echo start "%SERVER_EXE%" "%SERVER_PATH%" >> "%temp%\run_bds.bat"
-echo exit >> "%temp%\run_bds.bat"
+> "%temp%\run_bds.bat" echo @echo off
+>> "%temp%\run_bds.bat" echo cd /d "%SERVER_DIR%"
+>> "%temp%\run_bds.bat" echo type nul ^> "%SERVER_LOG%"
+>> "%temp%\run_bds.bat" echo "%SERVER_PATH%" ^> "%SERVER_LOG%" 2^>^&1
 
-start "" "%temp%\run_bds.bat"
+start "BDS Server" "%temp%\run_bds.bat"
 timeout /t 3 >nul
 
 :cek_server
@@ -185,6 +190,37 @@ echo bedrock_server.exe is running.
 :: Status Menu
 :: ==========================================
 :status
+:: Calculate Player Count
+set /a PLAYER_COUNT=0
+if exist "%SERVER_LOG%" (
+    for /f %%A in ('findstr /c:"Player connected:" "%SERVER_LOG%" 2^>nul ^| find /c /v ""') do set /a PLAYER_COUNT+=%%A
+    for /f %%A in ('findstr /c:"Player disconnected:" "%SERVER_LOG%" 2^>nul ^| find /c /v ""') do set /a PLAYER_COUNT-=%%A
+    if !PLAYER_COUNT! LSS 0 set /a PLAYER_COUNT=0
+)
+
+:: Auto-shutdown logic: increment timer if no players, reset if players present
+if %AUTO_SHUTDOWN_ENABLED% EQU 1 (
+    if !PLAYER_COUNT! EQU 0 (
+        set /a SHUTDOWN_TIMER+=1
+    ) else (
+        set /a SHUTDOWN_TIMER=0
+    )
+)
+
+:: Check if shutdown timer reached grace period (180 seconds = 3 minutes)
+set /a SHUTDOWN_REMAINING=%SHUTDOWN_GRACE_PERIOD% - %SHUTDOWN_TIMER%
+if %SHUTDOWN_TIMER% GEQ %SHUTDOWN_GRACE_PERIOD% (
+    cls
+    echo ==========================================
+    echo       Auto-Shutdown Triggered
+    echo ==========================================
+    echo.
+    echo No players detected for 3 minutes.
+    echo Shutting down server...
+    echo.
+    goto exit
+)
+
 cls
 echo ==========================================
 echo       Bedrock Dedicated Server - Status
@@ -192,17 +228,25 @@ echo ==========================================
 echo.
 echo Tunnel: ONLINE
 echo BDS   : ONLINE
+echo Players: !PLAYER_COUNT!
+if %AUTO_SHUTDOWN_ENABLED% EQU 1 (
+    if !PLAYER_COUNT! EQU 0 (
+        echo Auto-shutdown in: !SHUTDOWN_REMAINING! seconds
+    ) else (
+        echo Auto-shutdown: PAUSED ^(players online^)
+    )
+)
 echo.
 echo ------------------------------------------
 echo Options:
-echo [Play]    Launch Minecraft Bedrock
-echo [Exit]    Terminate all and close
-echo [Restart] Restart the activation process
+echo [R] Refresh player count
+echo [P] Launch Minecraft Bedrock
+echo [A] Toggle auto-shutdown
+echo [X] Terminate all and close
+echo [T] Restart the activation process
 echo.
-set /p "q1=Selection: "
-if /I "%q1%" == "play" goto launch_minecraft
-if /I "%q1%" == "exit" goto exit
-if /I "%q1%" == "restart" (
+choice /C RPAXT /N /T 1 /D R /M "Selection: "
+if errorlevel 5 (
     echo Restarting...
     taskkill /F /T /IM "%SERVER_EXE%" >nul 2>&1
     taskkill /F /T /IM "%PLAYIT_PROCESS%" >nul 2>&1
@@ -211,6 +255,20 @@ if /I "%q1%" == "restart" (
     start "" "%~f0"
     exit /b
 )
+if errorlevel 4 goto exit
+if errorlevel 3 (
+    if %AUTO_SHUTDOWN_ENABLED% EQU 1 (
+        set AUTO_SHUTDOWN_ENABLED=0
+        echo Auto-shutdown DISABLED.
+    ) else (
+        set AUTO_SHUTDOWN_ENABLED=1
+        set /a SHUTDOWN_TIMER=0
+        echo Auto-shutdown ENABLED.
+    )
+    timeout /t 2 >nul
+    goto status
+)
+if errorlevel 2 goto launch_minecraft
 goto status
 
 :launch_minecraft
