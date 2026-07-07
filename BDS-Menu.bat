@@ -16,6 +16,7 @@ set "SERVER_PATH="
 set "SERVER_LOG=%temp%\bds-live.log"
 set "PLAYER_COUNT=0"
 set "AUTO_SHUTDOWN_ENABLED=1"
+set "PC_SHUTDOWN_ENABLED=0"
 set "SHUTDOWN_GRACE_PERIOD=180"
 set "SHUTDOWN_TIMER=0"
 
@@ -170,9 +171,11 @@ if not exist "%SERVER_PATH%" (
 :: Start server as a separate process and pipe output to log
 :: We use a temporary script to ensure it runs correctly in its own window
 > "%temp%\run_bds.bat" echo @echo off
+>> "%temp%\run_bds.bat" echo title BDS Server
 >> "%temp%\run_bds.bat" echo cd /d "%SERVER_DIR%"
 >> "%temp%\run_bds.bat" echo type nul ^> "%SERVER_LOG%"
->> "%temp%\run_bds.bat" echo "%SERVER_PATH%" ^> "%SERVER_LOG%" 2^>^&1
+>> "%temp%\run_bds.bat" echo powershell -NoProfile -ExecutionPolicy Bypass -Command "& '%SERVER_PATH%' 2>&1 | Tee-Object -FilePath '%SERVER_LOG%'"
+>> "%temp%\run_bds.bat" echo exit
 
 start "BDS Server" "%temp%\run_bds.bat"
 timeout /t 3 >nul
@@ -216,9 +219,15 @@ if %SHUTDOWN_TIMER% GEQ %SHUTDOWN_GRACE_PERIOD% (
     echo ==========================================
     echo.
     echo No players detected for 3 minutes.
-    echo Shutting down server...
-    echo.
-    goto exit
+    if %PC_SHUTDOWN_ENABLED% EQU 1 (
+        echo Shutting down server and PC...
+        echo.
+        goto exit_and_shutdown
+    ) else (
+        echo Shutting down server...
+        echo.
+        goto exit
+    )
 )
 
 cls
@@ -236,17 +245,21 @@ if %AUTO_SHUTDOWN_ENABLED% EQU 1 (
         echo Auto-shutdown: PAUSED ^(players online^)
     )
 )
+if %PC_SHUTDOWN_ENABLED% EQU 1 (
+    echo PC Shutdown: ENABLED
+)
 echo.
 echo ------------------------------------------
 echo Options:
 echo [R] Refresh player count
 echo [P] Launch Minecraft Bedrock
 echo [A] Toggle auto-shutdown
+echo [S] Toggle PC shutdown on idle
 echo [X] Terminate all and close
 echo [T] Restart the activation process
 echo.
-choice /C RPAXT /N /T 1 /D R /M "Selection: "
-if errorlevel 5 (
+choice /C RPASXT /N /T 1 /D R /M "Selection: "
+if errorlevel 6 (
     echo Restarting...
     taskkill /F /T /IM "%SERVER_EXE%" >nul 2>&1
     taskkill /F /T /IM "%PLAYIT_PROCESS%" >nul 2>&1
@@ -255,7 +268,18 @@ if errorlevel 5 (
     start "" "%~f0"
     exit /b
 )
-if errorlevel 4 goto exit
+if errorlevel 5 goto exit
+if errorlevel 4 (
+    if %PC_SHUTDOWN_ENABLED% EQU 1 (
+        set PC_SHUTDOWN_ENABLED=0
+        echo PC Shutdown DISABLED.
+    ) else (
+        set PC_SHUTDOWN_ENABLED=1
+        echo PC Shutdown ENABLED.
+    )
+    timeout /t 2 >nul
+    goto status
+)
 if errorlevel 3 (
     if %AUTO_SHUTDOWN_ENABLED% EQU 1 (
         set AUTO_SHUTDOWN_ENABLED=0
@@ -289,19 +313,15 @@ timeout /t 2 >nul
 goto status
 
 :exit
-cls
-echo.
-echo Terminating running applications...
-echo.
-
-:: Taskkill with forceful termination
 taskkill /F /T /IM "%SERVER_EXE%" >nul 2>&1
 taskkill /F /T /IM "%PLAYIT_PROCESS%" >nul 2>&1
-:: Also kill the signed version seen in original code
 taskkill /F /T /IM "playit-windows-x86_64-signed.exe" >nul 2>&1
+exit
 
+:exit_and_shutdown
+taskkill /F /T /IM "%SERVER_EXE%" >nul 2>&1
+taskkill /F /T /IM "%PLAYIT_PROCESS%" >nul 2>&1
+taskkill /F /T /IM "playit-windows-x86_64-signed.exe" >nul 2>&1
 timeout /t 3 >nul
-echo.
-echo All applications have been terminated.
-timeout /t 3 >nul
-exit /b
+shutdown /s /t 0
+exit
