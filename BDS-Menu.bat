@@ -174,7 +174,7 @@ if not exist "%SERVER_PATH%" (
 >> "%temp%\run_bds.bat" echo title BDS Server
 >> "%temp%\run_bds.bat" echo cd /d "%SERVER_DIR%"
 >> "%temp%\run_bds.bat" echo type nul ^> "%SERVER_LOG%"
->> "%temp%\run_bds.bat" echo powershell -NoProfile -ExecutionPolicy Bypass -Command "& '%SERVER_PATH%' 2>&1 | Tee-Object -FilePath '%SERVER_LOG%'"
+>> "%temp%\run_bds.bat" echo powershell -NoProfile -ExecutionPolicy Bypass -Command "& '%SERVER_PATH%' 2>&1 | ForEach-Object { $_; Add-Content -LiteralPath '%SERVER_LOG%' -Value $_ -Encoding UTF8 }"
 >> "%temp%\run_bds.bat" echo exit
 
 start "BDS Server" "%temp%\run_bds.bat"
