@@ -17,7 +17,7 @@ set "SERVER_LOG=%temp%\bds-live.log"
 set "PLAYER_COUNT=0"
 set "AUTO_SHUTDOWN_ENABLED=1"
 set "PC_SHUTDOWN_ENABLED=0"
-set "SHUTDOWN_GRACE_PERIOD=180"
+set "SHUTDOWN_GRACE_PERIOD=300"
 set "SHUTDOWN_TIMER=0"
 
 set "MC_PROCESS=C:\XboxGames\Minecraft for Windows\Content\Minecraft.Windows.exe"
@@ -174,7 +174,7 @@ if not exist "%SERVER_PATH%" (
 >> "%temp%\run_bds.bat" echo title BDS Server
 >> "%temp%\run_bds.bat" echo cd /d "%SERVER_DIR%"
 >> "%temp%\run_bds.bat" echo type nul ^> "%SERVER_LOG%"
->> "%temp%\run_bds.bat" echo powershell -NoProfile -ExecutionPolicy Bypass -Command "& '%SERVER_PATH%' 2>&1 | ForEach-Object { $_; Add-Content -LiteralPath '%SERVER_LOG%' -Value $_ -Encoding UTF8 }"
+>> "%temp%\run_bds.bat" echo powershell -NoProfile -ExecutionPolicy Bypass -Command "& '%SERVER_PATH%' 2>&1 | ForEach-Object { $_; Out-File -LiteralPath '%SERVER_LOG%' -InputObject $_ -Append -Encoding UTF8 }"
 >> "%temp%\run_bds.bat" echo exit
 
 start "BDS Server" "%temp%\run_bds.bat"
@@ -203,14 +203,14 @@ if exist "%SERVER_LOG%" (
 
 :: Auto-shutdown logic: increment timer if no players, reset if players present
 if %AUTO_SHUTDOWN_ENABLED% EQU 1 (
-    if !PLAYER_COUNT! EQU 0 (
+    if !PLAYER_COUNT! EQU 0 (m
         set /a SHUTDOWN_TIMER+=1
     ) else (
         set /a SHUTDOWN_TIMER=0
     )
 )
 
-:: Check if shutdown timer reached grace period (180 seconds = 3 minutes)
+:: Check if shutdown timer reached grace period (300 seconds = 5 minutes)
 set /a SHUTDOWN_REMAINING=%SHUTDOWN_GRACE_PERIOD% - %SHUTDOWN_TIMER%
 if %SHUTDOWN_TIMER% GEQ %SHUTDOWN_GRACE_PERIOD% (
     cls
@@ -218,7 +218,7 @@ if %SHUTDOWN_TIMER% GEQ %SHUTDOWN_GRACE_PERIOD% (
     echo       Auto-Shutdown Triggered
     echo ==========================================
     echo.
-    echo No players detected for 3 minutes.
+    echo No players detected for 5 minutes.
     if %PC_SHUTDOWN_ENABLED% EQU 1 (
         echo Shutting down server and PC...
         echo.
