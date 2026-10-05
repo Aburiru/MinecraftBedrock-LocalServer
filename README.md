@@ -188,11 +188,11 @@ Most configuration values are located at the beginning of the batch file:
 
 ```bat
 set "TITLE=Minecraft Bedrock Dedicated Server - Menu"
-set "PLAYIT_EXE=C:\Program Files\playit_gg\bin\playit.exe"
+set "PLAYIT_EXE=[Your playit.exe path]"
 set "PLAYIT_PROCESS=playit.exe"
 set "PLAYIT_URL=https://playit.gg/account/tunnels"
 
-set "SERVER_BASE_DIR=C:\Users\abril\Documents\MinecraftServers"
+set "SERVER_BASE_DIR=[Your server base folder path]"
 set "SERVER_EXE=bedrock_server.exe"
 
 set "AUTO_SHUTDOWN_ENABLED=1"
