@@ -204,7 +204,7 @@ if exist "%SERVER_LOG%" (
 
 :: Auto-shutdown logic: increment timer if no players, reset if players present
 if %AUTO_SHUTDOWN_ENABLED% EQU 1 (
-    if !PLAYER_COUNT! EQU 0 (m
+    if !PLAYER_COUNT! EQU 0 (
         set /a SHUTDOWN_TIMER+=1
     ) else (
         set /a SHUTDOWN_TIMER=0
