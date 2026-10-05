@@ -47,6 +47,7 @@ cls
 cls
 echo ==========================================
 echo       Bedrock Dedicated Server - Menu
+echo                           made by: aburiru  
 echo ==========================================
 echo.
 echo Notice:
