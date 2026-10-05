@@ -82,34 +82,7 @@ if not exist "%SERVER_BASE_DIR%" (
     goto menu
 )
 
-:: ==========================================
-:: Check if the base folder itself is a server
-:: ==========================================
-if exist "%SERVER_BASE_DIR%\%SERVER_EXE%" (
-    echo [1] %~nxSERVER_BASE_DIR%
-    echo.
-    echo [B] Back to main menu
-    echo.
-    set /p "server_choice=Choose server: "
-
-    if /I "%server_choice%" == "B" goto menu
-
-    if "%server_choice%" == "1" (
-        set "SERVER_DIR=%SERVER_BASE_DIR%"
-        set "SERVER_PATH=%SERVER_DIR%\%SERVER_EXE%"
-        goto start
-    )
-
-    echo Invalid selection.
-    pause
-    goto select_server
-)
-
-:: ==========================================
-:: Otherwise search for server subfolders
-:: ==========================================
 set /a SERVER_COUNT=0
-
 for /D %%D in ("%SERVER_BASE_DIR%\*") do (
     if exist "%%~fD\%SERVER_EXE%" (
         set /a SERVER_COUNT+=1
@@ -119,12 +92,8 @@ for /D %%D in ("%SERVER_BASE_DIR%\*") do (
 )
 
 if %SERVER_COUNT% EQU 0 (
-    echo.
     echo No valid server folders found.
-    echo.
-    echo A valid server folder must contain:
-    echo %SERVER_EXE%
-    echo.
+    echo Each server folder must contain %SERVER_EXE%.
     pause
     goto menu
 )
@@ -137,11 +106,8 @@ set /p "server_choice=Choose server: "
 if /I "%server_choice%" == "B" goto menu
 
 set "SERVER_DIR="
-
 for /L %%I in (1,1,%SERVER_COUNT%) do (
-    if "%server_choice%" == "%%I" (
-        set "SERVER_DIR=!SERVER_%%I!"
-    )
+    if "%server_choice%" == "%%I" set "SERVER_DIR=!SERVER_%%I!"
 )
 
 if not defined SERVER_DIR (
