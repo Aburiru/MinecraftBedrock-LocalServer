@@ -171,7 +171,7 @@ C:\Program Files\playit_gg\bin\playit.exe
 If your installation uses a different location, change the following configuration value in the script:
 
 ```bat
-set "PLAYIT_EXE=C:\Program Files\playit_gg\bin\playit.exe"
+set "PLAYIT_EXE=[Your playit.exe path]"
 ```
 
 ### 4. Configure your tunnel
