@@ -5,11 +5,11 @@ setlocal EnableDelayedExpansion
 :: Configuration Section
 :: ==========================================
 set "TITLE=Minecraft Bedrock Dedicated Server - Menu"
-set "PLAYIT_EXE=C:\Program Files\playit_gg\bin\playit.exe"
+set "PLAYIT_EXE=[Your playit.exe path]"
 set "PLAYIT_PROCESS=playit.exe"
 set "PLAYIT_URL=https://playit.gg/account/tunnels"
 
-set "SERVER_BASE_DIR=C:\Users\abril\Documents\MinecraftServers"
+set "SERVER_BASE_DIR=[Your server base folder path]"
 set "SERVER_EXE=bedrock_server.exe"
 set "SERVER_DIR="
 set "SERVER_PATH="
@@ -20,7 +20,7 @@ set "PC_SHUTDOWN_ENABLED=0"
 set "SHUTDOWN_GRACE_PERIOD=300"
 set "SHUTDOWN_TIMER=0"
 
-set "MC_PROCESS=C:\XboxGames\Minecraft for Windows\Content\Minecraft.Windows.exe"
+set "MC_PROCESS=[Your Minecraft process path]"
 
 :: ==========================================
 :: Elevation Check
